@@ -210,6 +210,7 @@ export default function DashboardPage() {
     }
 
     setJobs([]);
+    setInsight(null);
     setNotice("All documents have been removed.");
   };
 
@@ -218,7 +219,13 @@ export default function DashboardPage() {
       return;
     }
 
-    setJobs((prevJobs) => prevJobs.filter((job) => job.phase !== "completed"));
+    setJobs((prevJobs) => {
+      const remaining = prevJobs.filter((job) => job.phase !== "completed");
+      if (remaining.length === 0) {
+        setInsight(null);
+      }
+      return remaining;
+    });
     setNotice("Ready documents have been removed from the list.");
   };
 

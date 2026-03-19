@@ -471,6 +471,10 @@ tbody td {
   border: 1px solid var(--line);
   background: #fff;
   padding: 1rem;
+  /* Prevent horizontal overflow */
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .summary-header {
@@ -478,12 +482,14 @@ tbody td {
   justify-content: space-between;
   gap: 0.8rem;
   align-items: start;
+  min-width: 0;
 }
 
 .summary-header h3 {
   margin: 0;
   font-size: 1.02rem;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .summary-header p {
@@ -507,12 +513,20 @@ tbody td {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.8rem;
+  /* Prevent horizontal grid blowout */
+  min-width: 0;
 }
 
 .summary-block {
   border-radius: 12px;
   border: 1px solid var(--line);
   padding: 0.72rem;
+  /* Prevent long unbreakable text from overflowing */
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  box-sizing: border-box;
 }
 
 .summary-block h4 {
