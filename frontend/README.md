@@ -11,7 +11,7 @@ This application supports:
 - Parallel per-document summary preparation
 - Side-by-side English and Sinhala summary display
 - Download each summary as a PDF report
-- Integrated feedback widget for user input
+- Signup and login flow for secure user access
 - Summary history page for previously processed files
 - Scenario-aware portfolio insight detection:
 - Mixed-topic submission handling
@@ -41,6 +41,7 @@ src/
 - pages/
 - HomePage.jsx
 - LoginPage.jsx
+- SignupPage.jsx
 - DashboardPage.jsx
 - HistoryPage.jsx
 - SecurityPage.jsx
@@ -52,7 +53,6 @@ src/
 - SummaryCard.jsx
 - PdfDownloadButton.jsx
 - ArchitectureFlow.jsx
-- FeedbackWidget.jsx
 - services/
 - summarizerApi.js
 - utils/
@@ -96,8 +96,7 @@ npm run preview
 3. Start processing to generate document-level summaries in parallel.
 4. Review English and Sinhala summaries side by side.
 5. Download individual PDF reports when needed.
-6. Submit user feedback from the floating feedback widget.
-7. Revisit prior outputs from the history page.
+6. Revisit prior outputs from the history page.
 
 ## Service Modes
 
