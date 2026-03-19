@@ -4,8 +4,8 @@ import ProcessingTable from "../components/ProcessingTable";
 import ScenarioInsight from "../components/ScenarioInsight";
 import SummaryCard from "../components/SummaryCard";
 import UploadZone from "../components/UploadZone";
+import { useAuth } from "../context/AuthContext";
 import { summarizeDocument } from "../services/summarizerApi";
-import { appendHistoryEntries } from "../utils/historyStore";
 import { buildBatchInsight } from "../utils/batchInsights";
 import { validateFile } from "../utils/fileUtils";
 
@@ -23,9 +23,8 @@ function createJob(file) {
 }
 
 export default function DashboardPage() {
+  const { authToken } = useAuth();
   const [jobs, setJobs] = useState([]);
-  const [useMock, setUseMock] = useState(true);
-  const [apiBaseUrl, setApiBaseUrl] = useState("http://localhost:8000");
   const [isRunning, setIsRunning] = useState(false);
   const [notice, setNotice] = useState("");
 
@@ -134,19 +133,7 @@ export default function DashboardPage() {
         error: null,
       });
 
-      return {
-        ok: true,
-        entry: {
-          fileName: job.file.name,
-          size: job.file.size,
-          topic: result.topic,
-          publicationYear: result.publicationYear,
-          confidence: result.confidence,
-          englishSummary: result.englishSummary,
-          sinhalaSummary: result.sinhalaSummary,
-          keyFindings: result.keyFindings,
-        },
-      };
+      return { ok: true };
     } catch (error) {
       updateJob(job.id, {
         phase: "error",
@@ -180,20 +167,21 @@ export default function DashboardPage() {
       return;
     }
 
+    if (!authToken) {
+      setNotice("Your session has expired. Please sign in again.");
+      return;
+    }
+
     setIsRunning(true);
     setNotice(`Preparing summaries for ${targetJobs.length} document(s)...`);
 
     const config = {
-      useMock,
-      apiBaseUrl,
+      token: authToken,
     };
 
     const outcomes = await Promise.all(targetJobs.map((job) => runOne(job, config)));
 
     setIsRunning(false);
-
-    const successfulEntries = outcomes.filter((item) => item.ok && item.entry).map((item) => item.entry);
-    appendHistoryEntries(successfulEntries);
 
     const hasErrors = outcomes.some((item) => !item.ok);
     if (hasErrors) {
@@ -274,51 +262,16 @@ export default function DashboardPage() {
           onClearCompleted={clearCompleted}
         />
 
-        <section className="panel section controls-panel">
-          <div className="panel-header-row">
-            <div>
-              <p className="kicker">Service Settings</p>
-              <h2>Run Settings</h2>
-              <p className="subtle-text">
-                Use preview mode for quick trials or connect your live service endpoint.
-              </p>
-            </div>
-          </div>
-
-          <div className="controls-grid">
-            <label className="switch-row" htmlFor="demoMode">
-              <span>Preview Mode</span>
-              <input
-                id="demoMode"
-                type="checkbox"
-                checked={useMock}
-                onChange={(event) => setUseMock(event.target.checked)}
-                disabled={isRunning}
-              />
-            </label>
-
-            <label className="input-stack" htmlFor="apiBase">
-              <span>Service URL</span>
-              <input
-                id="apiBase"
-                type="text"
-                value={apiBaseUrl}
-                onChange={(event) => setApiBaseUrl(event.target.value)}
-                disabled={isRunning || useMock}
-                placeholder="http://localhost:8000"
-              />
-            </label>
-
-            <button
-              type="button"
-              className="primary-btn"
-              disabled={isRunning || pendingJobs.length === 0}
-              onClick={() => startProcessing()}
-            >
-              {isRunning ? "Preparing..." : "Generate Summaries"}
-            </button>
-          </div>
-
+        <section className="panel section" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <button
+            type="button"
+            className="primary-btn"
+            style={{ padding: "1rem", fontSize: "1.05rem" }}
+            disabled={isRunning || pendingJobs.length === 0}
+            onClick={() => startProcessing()}
+          >
+            {isRunning ? "Preparing..." : "Generate Summaries"}
+          </button>
           {notice ? <div className="notice">{notice}</div> : null}
         </section>
 

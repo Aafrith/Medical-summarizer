@@ -1,140 +1,99 @@
-# Medical Multi-Document Summarizer Frontend
+# Medical Summarizer (Full Stack)
 
-Complete React + JSX web application for medical document summarization with secure access, multi-page navigation, and bilingual output delivery.
+Full-stack medical document summarization platform with:
 
-This application supports:
+- React frontend (`frontend/`)
+- FastAPI backend (`backend/`)
+- MongoDB persistence for users and summary history
 
-- Secure user sign-in and protected workspace routes
-- Multi-page navigation with professional top navbar
-- Uploading single or multiple medical documents at once
-- Allowed document formats: PDF, TXT, DOC, DOCX
-- Parallel per-document summary preparation
-- Side-by-side English and Sinhala summary display
-- Download each summary as a PDF report
-- Integrated feedback widget for user input
-- Summary history page for previously processed files
-- Scenario-aware portfolio insight detection:
-- Mixed-topic submission handling
-- Same-topic time-based comparison handling
-- Fully responsive design for desktop and mobile
+## Workspace Structure
 
-## Tech Stack
+- `frontend/` React + Vite client
+- `backend/` FastAPI API service
 
-- React 18
-- Vite 5
-- Plain JavaScript and JSX (no TypeScript)
-- React Router for navigation and page routing
-- jsPDF for report download
-- Custom CSS UI (responsive desktop + mobile)
+## Backend Setup
 
-## Project Structure
+1. Move to backend directory:
 
-src/
+```bash
+cd backend
+```
 
-- App.jsx: Route map and app shell
-- main.jsx: Entrypoint with BrowserRouter
-- styles.css: Shared responsive design system
-- context/
-- AuthContext.jsx: Authentication state and login/logout flows
-- layout/
-- ProtectedRoute.jsx: Route-level access protection
-- pages/
-- HomePage.jsx
-- LoginPage.jsx
-- DashboardPage.jsx
-- HistoryPage.jsx
-- SecurityPage.jsx
-- components/
-- TopNavbar.jsx
-- UploadZone.jsx
-- ProcessingTable.jsx
-- ScenarioInsight.jsx
-- SummaryCard.jsx
-- PdfDownloadButton.jsx
-- ArchitectureFlow.jsx
-- FeedbackWidget.jsx
-- services/
-- summarizerApi.js
-- utils/
-- fileUtils.js
-- batchInsights.js
-- pdfExport.js
-- historyStore.js
-- data/
-- featureContent.js
+2. Create virtual environment and install dependencies:
 
-## How to Run
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-1. Install dependencies:
+3. Create `.env` from `.env.example` and update values:
+
+```env
+MONGODB_URI=mongodb+srv://medicalsummarizer:medicalsummarizer@medicalsummarizer.i4ourj5.mongodb.net/
+MONGODB_DB_NAME=medical_summarizer
+JWT_SECRET_KEY=replace-with-strong-secret
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+MAX_UPLOAD_SIZE_MB=25
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+4. Run backend:
+
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+If your terminal is already in `backend/app`, you can run:
+
+```bash
+python main.py
+```
+
+## Frontend Setup
+
+1. Move to frontend directory:
+
+```bash
+cd frontend
+```
+
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-2. Start development server:
+3. Create `.env` (or copy from `.env.example`):
+
+```env
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+4. Run frontend:
 
 ```bash
 npm run dev
 ```
 
-3. Build production assets:
+## API Endpoints
 
-```bash
-npm run build
-```
+### Authentication
 
-4. Preview production build:
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
 
-```bash
-npm run preview
-```
+### Summaries
 
-## Application Workflow
-
-1. Sign in through the secure login page.
-2. Open the dashboard and upload one or multiple documents.
-3. Start processing to generate document-level summaries in parallel.
-4. Review English and Sinhala summaries side by side.
-5. Download individual PDF reports when needed.
-6. Submit user feedback from the floating feedback widget.
-7. Revisit prior outputs from the history page.
-
-## Service Modes
-
-The app includes two modes:
-
-- Preview Mode (default):
-- Uses a built-in mock processing pipeline for full frontend testing without backend.
-
-- Live Service Mode:
-- Disable Preview Mode and set Service URL.
-- Frontend sends each document to:
-
-`POST {API_BASE_URL}/summarize`
-
-Request format:
-
-- multipart/form-data
-- field name: file
-
-Expected JSON response shape:
-
-```json
-{
-	"englishSummary": "string",
-	"sinhalaSummary": "string",
-	"topic": "string",
-	"confidence": 0.91,
-	"keyFindings": ["point 1", "point 2"],
-	"publicationYear": 2024
-}
-```
+- `POST /api/v1/summaries/upload`
+- `GET /api/v1/summaries/history`
+- `GET /api/v1/summaries/{summary_id}`
+- `DELETE /api/v1/summaries/{summary_id}`
+- `DELETE /api/v1/summaries/history`
 
 ## Notes
 
-- Login can run in frontend mock mode when no auth API is configured.
-- In mock mode, any valid email and password with at least 8 characters can sign in.
-- Optional auth backend can be configured using `VITE_AUTH_API`.
-- Duplicate uploads (same name + size) are skipped.
-- Maximum file size is 25 MB per file.
-- Files are processed concurrently to return multiple summaries in one run.
+- Frontend now runs in API-only mode; all mock mode paths have been removed.
+- Current backend summary generation and Sinhala output are deterministic placeholders designed for future AI model integration.

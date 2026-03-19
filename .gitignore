@@ -1,0 +1,15 @@
+# Python backend artifacts
+backend/.venv/
+backend/.env
+backend/__pycache__/
+backend/**/*.pyc
+backend/**/__pycache__/
+
+# Frontend artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# Editor/OS
+.DS_Store
+Thumbs.db

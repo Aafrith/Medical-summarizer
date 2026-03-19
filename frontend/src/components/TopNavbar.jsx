@@ -44,7 +44,7 @@ export default function TopNavbar() {
       <div className="nav-actions">
         {isAuthenticated ? (
           <>
-            <div className="user-chip">{user?.name || user?.email || "User"}</div>
+            <div className="user-chip">{user?.fullName || user?.email || "User"}</div>
             <button type="button" className="ghost-btn" onClick={handleLogout}>
               Sign Out
             </button>

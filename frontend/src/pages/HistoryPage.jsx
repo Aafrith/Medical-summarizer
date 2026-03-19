@@ -1,9 +1,37 @@
-import { useMemo, useState } from "react";
-import { clearHistoryEntries, getHistoryEntries } from "../utils/historyStore";
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { apiRequest } from "../services/apiClient";
 import { downloadSummaryPdf } from "../utils/pdfExport";
 
 export default function HistoryPage() {
-  const [entries, setEntries] = useState(() => getHistoryEntries());
+  const { authToken } = useAuth();
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadHistory() {
+      if (!authToken) {
+        setEntries([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const data = await apiRequest("/summaries/history", { token: authToken });
+        setEntries(Array.isArray(data.items) ? data.items : []);
+      } catch (requestError) {
+        setError(requestError instanceof Error ? requestError.message : "Unable to load summary history.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadHistory();
+  }, [authToken]);
 
   const hasData = entries.length > 0;
 
@@ -11,9 +39,18 @@ export default function HistoryPage() {
     return entries.slice(0, 40);
   }, [entries]);
 
-  const clearHistory = () => {
-    clearHistoryEntries();
-    setEntries([]);
+  const clearHistory = async () => {
+    if (!authToken || entries.length === 0) {
+      return;
+    }
+
+    try {
+      await apiRequest("/summaries/history", { method: "DELETE", token: authToken });
+      setEntries([]);
+      setError("");
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Unable to clear summary history.");
+    }
   };
 
   return (
@@ -31,7 +68,14 @@ export default function HistoryPage() {
           </button>
         </div>
 
-        {!hasData ? (
+        {error ? <div className="notice">{error}</div> : null}
+
+        {loading ? (
+          <div className="empty-state">
+            <h3>Loading history...</h3>
+            <p>Retrieving your previous summary runs.</p>
+          </div>
+        ) : !hasData ? (
           <div className="empty-state">
             <h3>No history available yet</h3>
             <p>Processed summaries will appear here automatically.</p>
