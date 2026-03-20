@@ -1,12 +1,9 @@
 import { useMemo, useState } from "react";
-import ArchitectureFlow from "../components/ArchitectureFlow";
 import ProcessingTable from "../components/ProcessingTable";
-import ScenarioInsight from "../components/ScenarioInsight";
 import SummaryCard from "../components/SummaryCard";
 import UploadZone from "../components/UploadZone";
 import { useAuth } from "../context/AuthContext";
 import { summarizeDocument } from "../services/summarizerApi";
-import { buildBatchInsight } from "../utils/batchInsights";
 import { validateFile } from "../utils/fileUtils";
 
 function createJob(file) {
@@ -40,8 +37,6 @@ export default function DashboardPage() {
     const total = jobs.reduce((sum, job) => sum + job.progress, 0);
     return Math.round(total / jobs.length);
   }, [jobs]);
-
-  const insight = useMemo(() => buildBatchInsight(completedJobs), [completedJobs]);
 
   const updateJob = (jobId, patch) => {
     setJobs((prevJobs) =>
@@ -210,7 +205,6 @@ export default function DashboardPage() {
     }
 
     setJobs([]);
-    setInsight(null);
     setNotice("All documents have been removed.");
   };
 
@@ -219,13 +213,7 @@ export default function DashboardPage() {
       return;
     }
 
-    setJobs((prevJobs) => {
-      const remaining = prevJobs.filter((job) => job.phase !== "completed");
-      if (remaining.length === 0) {
-        setInsight(null);
-      }
-      return remaining;
-    });
+    setJobs((prevJobs) => prevJobs.filter((job) => job.phase !== "completed"));
     setNotice("Ready documents have been removed from the list.");
   };
 
@@ -284,8 +272,6 @@ export default function DashboardPage() {
 
         <ProcessingTable jobs={jobs} onRemove={removeJob} onRetry={retryOne} running={isRunning} />
 
-        <ScenarioInsight insight={insight} />
-
         {completedJobs.length > 0 ? (
           <section className="panel section">
             <div className="panel-header-row">
@@ -306,7 +292,6 @@ export default function DashboardPage() {
           </section>
         ) : null}
 
-        <ArchitectureFlow />
       </main>
     </div>
   );

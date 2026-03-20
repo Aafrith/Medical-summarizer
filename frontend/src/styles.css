@@ -434,32 +434,6 @@ tbody td {
   color: #0c4a6e;
 }
 
-.insight-panel {
-  border: 1px solid rgba(217, 93, 57, 0.26);
-  background: linear-gradient(160deg, rgba(217, 93, 57, 0.1), rgba(245, 158, 11, 0.08));
-}
-
-.insight-badge {
-  width: fit-content;
-  border-radius: 999px;
-  padding: 0.28rem 0.66rem;
-  background: rgba(217, 93, 57, 0.18);
-  color: #9a3412;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.insight-panel h3 {
-  margin: 0.7rem 0 0.35rem;
-}
-
-.insight-panel p {
-  margin: 0;
-  color: var(--ink-2);
-}
-
 .summary-grid {
   margin-top: 0.95rem;
   display: grid;

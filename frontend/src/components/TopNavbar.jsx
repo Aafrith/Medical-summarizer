@@ -36,7 +36,6 @@ export default function TopNavbar() {
 
       <div className="nav-links-wrap">
         <LinkItem to="/">Home</LinkItem>
-        <LinkItem to="/security">Security</LinkItem>
         {isAuthenticated ? <LinkItem to="/dashboard">Dashboard</LinkItem> : null}
         {isAuthenticated ? <LinkItem to="/history">History</LinkItem> : null}
       </div>

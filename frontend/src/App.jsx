@@ -7,7 +7,6 @@ import HistoryPage from "./pages/HistoryPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
-import SecurityPage from "./pages/SecurityPage";
 
 function AppRoutes() {
   return (
@@ -20,7 +19,7 @@ function AppRoutes() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/security" element={<SecurityPage />} />
+        <Route path="/security" element={<Navigate to="/" replace />} />
         <Route
           path="/dashboard"
           element={

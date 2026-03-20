@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { coreCapabilities, trustHighlights } from "../data/featureContent";
 import { useAuth } from "../context/AuthContext";
 
 export default function HomePage() {
@@ -9,11 +8,10 @@ export default function HomePage() {
   return (
     <div className="app-shell">
       <header className="hero section">
-        <p className="tag">Enterprise Clinical Intelligence</p>
-        <h1>Transform Medical Documents Into Bilingual Insights</h1>
+        <p className="tag">Welcome</p>
+        <h1>Medical Summarizer</h1>
         <p className="hero-copy">
-          MedSummary Pro helps teams process single or multi-document submissions and deliver structured
-          English and Sinhala summaries for fast review and confident decision making.
+          Upload your medical documents and generate clear English and Sinhala summaries in one place.
         </p>
 
         <div className="hero-cta-row">
@@ -22,10 +20,7 @@ export default function HomePage() {
             className="primary-btn"
             onClick={() => navigate(isAuthenticated ? "/dashboard" : "/login")}
           >
-            {isAuthenticated ? "Open Workspace" : "Start Secure Session"}
-          </button>
-          <button type="button" className="ghost-btn" onClick={() => navigate("/security")}>
-            View Security
+            Start Summarising
           </button>
         </div>
       </header>
@@ -33,34 +28,27 @@ export default function HomePage() {
       <section className="panel section">
         <div className="panel-header-row">
           <div>
-            <p className="kicker">Core Capabilities</p>
-            <h2>Built For Scalable Clinical Workflows</h2>
+            <p className="kicker">About This System</p>
+            <h2>Simple and Easy to Use</h2>
           </div>
         </div>
 
         <div className="capability-grid">
-          {coreCapabilities.map((item) => (
-            <article key={item.title} className="capability-card">
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+          <article className="capability-card">
+            <h3>Upload Your Documents</h3>
+            <p>Add one file or many files at once in just a few clicks.</p>
+          </article>
 
-      <section className="panel section">
-        <div className="panel-header-row">
-          <div>
-            <p className="kicker">Trust & Governance</p>
-            <h2>Security and Reliability Highlights</h2>
-          </div>
-        </div>
+          <article className="capability-card">
+            <h3>Get Clear Summaries</h3>
+            <p>Read short and clear summaries in English and Sinhala.</p>
+          </article>
 
-        <ul className="trust-list">
-          {trustHighlights.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
+          <article className="capability-card">
+            <h3>Review with Confidence</h3>
+            <p>See your results in one place and keep your work organized.</p>
+          </article>
+        </div>
       </section>
     </div>
   );
