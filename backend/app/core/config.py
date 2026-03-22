@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     max_upload_size_mb: int = 25
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    gradio_summary_url: str = ""
+    gradio_translation_url: str = ""
+
     model_config = SettingsConfigDict(
         env_file=str(BACKEND_ROOT / ".env"),
         env_file_encoding="utf-8",

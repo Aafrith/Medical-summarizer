@@ -59,9 +59,7 @@ export function formatPhaseLabel(phase) {
 
   const phaseLabels = {
     queued: "Waiting",
-    uploading: "Preparing",
-    summarizing: "Generating Summary",
-    translating: "Preparing Sinhala Version",
+    processing: "Processing...",
     completed: "Ready",
     error: "Needs Attention",
   };

@@ -104,8 +104,8 @@ export default function DashboardPage() {
 
   const runOne = async (job, config) => {
     updateJob(job.id, {
-      phase: "uploading",
-      progress: 8,
+      phase: "processing",
+      progress: 10,
       startedAt: Date.now(),
       completedAt: null,
       error: null,

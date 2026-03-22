@@ -7,20 +7,16 @@ export async function summarizeDocument(file, options) {
     throw new Error("Authentication is required to process documents.");
   }
 
-  onPhaseChange?.("uploading", 20);
+  onPhaseChange?.("processing", 15);
 
   const formData = new FormData();
   formData.append("file", file);
-
-  onPhaseChange?.("summarizing", 62);
 
   const data = await apiRequest("/summaries/upload", {
     method: "POST",
     body: formData,
     token,
   });
-
-  onPhaseChange?.("translating", 95);
 
   return {
     id: data.id,

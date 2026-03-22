@@ -23,7 +23,7 @@ async def upload_and_summarize(
     current_user: dict = Depends(get_current_user),
 ) -> SummaryResponse:
     text_content, file_type, file_size = await extract_text_from_upload(file, settings.max_upload_size_mb)
-    summary_bundle = generate_summary_bundle(file_name=file.filename or "document", text=text_content)
+    summary_bundle = await generate_summary_bundle(file_name=file.filename or "document", text=text_content)
 
     summary_doc = {
         "user_id": current_user["_id"],

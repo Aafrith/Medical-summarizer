@@ -1,5 +1,10 @@
+import logging
 import re
 from datetime import datetime
+
+from app.services.gradio_service import call_summary_api, call_translation_api
+
+logger = logging.getLogger(__name__)
 
 TOPIC_KEYWORDS: list[tuple[str, list[str]]] = [
     ("Oncology", ["cancer", "tumor", "oncology", "carcinoma", "metastasis"]),
@@ -44,40 +49,6 @@ def split_sentences(text: str) -> list[str]:
     return [sentence.strip() for sentence in rough_sentences if sentence.strip()]
 
 
-def build_english_summary(file_name: str, text: str, topic: str, publication_year: int | None) -> tuple[str, list[str]]:
-    sentences = split_sentences(text)
-
-    if not sentences:
-        fallback = f"This document ({file_name}) was received, but text extraction was limited."
-        return fallback, ["Document received successfully.", "Text extraction is limited."]
-
-    selected = sentences[:3]
-    key_findings = selected[:3]
-
-    year_text = f"Publication year signal: {publication_year}." if publication_year else "Publication year not detected."
-
-    summary = " ".join(
-        [
-            f"Document: {file_name}.",
-            year_text,
-            f"Detected clinical focus: {topic}.",
-            *selected,
-        ]
-    )
-
-    return summary, key_findings
-
-
-def build_sinhala_summary(topic: str, english_summary: str, key_findings: list[str]) -> str:
-    finding_text = " ".join(key_findings[:2]) if key_findings else "ප්‍රධාන කරුණු දෙකක් හඳුනාගෙන ඇත."
-
-    return (
-        f"{topic} විෂයයට අදාළ මෙම ලේඛනය සඳහා ස්වයංක්‍රීය සිංහල සාරාංශයක් සකස් කර ඇත. "
-        "පද්ධතිය විසින් හඳුනාගත් ප්‍රධාන වෛද්‍ය කරුණු සංක්ෂිප්තව මෙහි ඉදිරිපත් කර ඇත. "
-        f"ප්‍රධාන නිරීක්ෂණ: {finding_text}"
-    )
-
-
 def estimate_confidence(text: str) -> float:
     text_length = len(text)
     if text_length < 400:
@@ -87,16 +58,39 @@ def estimate_confidence(text: str) -> float:
     return 0.86
 
 
-def generate_summary_bundle(file_name: str, text: str) -> dict:
+async def generate_summary_bundle(file_name: str, text: str) -> dict:
+    """Build the full summary bundle by calling both Gradio AI services.
+
+    - English summary  → Summary Gradio space
+    - Sinhala summary  → Translation Gradio space (translates the English result)
+    - Topic / year     → Local heuristics (unchanged)
+    """
+    logger.info(f"Generating summary bundle for file: {file_name}")
+    
     topic = detect_topic(file_name=file_name, text=text)
     publication_year = detect_publication_year(file_name=file_name, text=text)
-    english_summary, key_findings = build_english_summary(
-        file_name=file_name,
-        text=text,
-        topic=topic,
-        publication_year=publication_year,
-    )
-    sinhala_summary = build_sinhala_summary(topic=topic, english_summary=english_summary, key_findings=key_findings)
+    logger.info(f"Detected topic: {topic}, year: {publication_year}")
+
+    # Call Gradio summary API with the document text (capped to avoid token limits)
+    logger.info("Calling Summary API...")
+    english_summary = await call_summary_api(text[:8000])
+    logger.info("Summary API call successful.")
+
+    # Derive key findings from the first 3 sentences of the AI summary
+    key_findings = split_sentences(english_summary)[:3]
+
+    # Translate the English summary to Sinhala via the translation Gradio API
+    sinhala_summary = ""
+    try:
+        logger.info("Calling Translation API...")
+        sinhala_summary = await call_translation_api(english_summary)
+        logger.info("Translation API call successful.")
+    except Exception as e:
+        logger.warning(f"Translation service failed: {str(e)}. Proceeding with English summary only.")
+        sinhala_summary = (
+            "සිංහල පරිවර්තනය දැනට ලබා ගත නොහැක. කරුණාකර ඉංග්‍රීසි සාරාංශය බලන්න. "
+            "(Sinhala translation is currently unavailable. Please refer to the English summary.)"
+        )
 
     return {
         "topic": topic,
