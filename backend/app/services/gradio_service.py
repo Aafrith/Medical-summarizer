@@ -16,21 +16,65 @@ from app.core.config import get_settings
 logger = logging.getLogger(__name__)
 
 
-def _predict_sync(url: str, api_params: dict) -> str:
-    """Synchronous helper – runs inside an executor thread."""
-    try:
-        logger.info(f"Initializing Gradio Client for URL: {url}")
-        client = Client(url, verbose=False)
+# In-memory cache for Gradio Client objects to avoid repeated config fetching.
+_client_cache: dict[str, Client] = {}
+
+
+def _get_client(url: str, max_retries: int = 3) -> Client:
+    """Gets a Gradio Client from cache or initializes a new one with retries."""
+    if url not in _client_cache:
+        last_exception = None
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Initializing Gradio Client for URL: {url} (Attempt {attempt + 1})")
+                _client_cache[url] = Client(url, verbose=False)
+                logger.info(f"Gradio Client for {url} initialized successfully.")
+                return _client_cache[url]
+            except Exception as e:
+                last_exception = e
+                logger.warning(f"Initialization attempt {attempt + 1} failed for {url}: {e}")
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(2)
         
-        # Log parameter keys (avoid logging full text to keep logs clean)
-        logger.info(f"Calling Gradio predict on {url} with params: {list(api_params.keys())}")
+        logger.error(f"Failed to initialize Gradio Client for {url} after {max_retries} attempts.")
+        raise last_exception or Exception(f"Failed to initialize client for {url}")
         
-        result = client.predict(**api_params, api_name="/predict")
-        logger.info(f"Gradio call to {url} succeeded.")
-        return str(result)
-    except Exception as e:
-        logger.error(f"Gradio prediction failed for {url}: {str(e)}")
-        raise
+    return _client_cache[url]
+
+
+def _predict_sync(url: str, api_params: dict, max_retries: int = 2) -> str:
+    """Synchronous helper – runs inside an executor thread with retries and caching."""
+    last_exception = None
+    
+    for attempt in range(max_retries):
+        try:
+            client = _get_client(url)
+            
+            # Log parameter keys (avoid logging full text to keep logs clean)
+            logger.info(f"Attempt {attempt + 1}: Calling Gradio predict on {url} with params: {list(api_params.keys())}")
+            
+            result = client.predict(**api_params, api_name="/predict")
+            logger.info(f"Gradio call to {url} succeeded.")
+            return str(result)
+            
+        except Exception as e:
+            last_exception = e
+            error_msg = str(e)
+            logger.warning(f"Prediction attempt {attempt + 1} failed for {url}: {error_msg}")
+            
+            # If the cached client is potentially invalid (e.g. heartbeat/connection issues), 
+            # clear it from cache so the next attempt or call re-initializes.
+            if url in _client_cache:
+                logger.info(f"Clearing cached client for {url} due to failure.")
+                del _client_cache[url]
+            
+            if attempt < max_retries - 1:
+                import time
+                time.sleep(1)
+
+    logger.error(f"Gradio prediction failed for {url} after {max_retries} attempts.")
+    raise last_exception or Exception(f"Gradio prediction failed for {url}")
 
 
 async def _call_gradio(url: str, api_params: dict, label: str) -> str:
@@ -82,12 +126,9 @@ async def call_summary_api(text: str) -> str:
 async def call_translation_api(english_text: str) -> str:
     """Call the EN→Sinhala translation Gradio space and return the Sinhala text."""
     settings = get_settings()
-    # For translation, we'll try 'input_text' as it's common in these spaces,
-    # but fallback to 'message' if it was working before. 
-    # The user didn't specify, so we'll use a likely correct one or keep original.
-    # Given the summarizer used 'input_text', it's likely this one does too.
+    # User provided snippet shows 'message' for the translation call
     params = {
-        "input_text": english_text
+        "message": english_text
     }
     return await _call_gradio(
         url=settings.gradio_translation_url,
