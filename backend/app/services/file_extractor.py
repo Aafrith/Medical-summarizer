@@ -63,8 +63,8 @@ def _extract_pdf_content(content: bytes) -> dict:
             tabs = page.find_tables()
             logger.info(f"Found {len(tabs.tables)} tables on page {page_index + 1}")
             for tab_index, tab in enumerate(tabs):
-                df = tab.to_pandas()
-                table_text = df.to_string(index=False)
+                # Use built-in markdown generation instead of pandas
+                table_text = tab.to_markdown()
                 tables.append(table_text)
                 logger.info(f"Extracted table {tab_index + 1} from page {page_index + 1}")
         except Exception as e:

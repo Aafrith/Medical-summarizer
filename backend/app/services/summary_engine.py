@@ -54,7 +54,7 @@ def split_sentences(text: str) -> list[str]:
     return [sentence.strip() for sentence in rough_sentences if sentence.strip()]
 
 
-def chunk_text_for_translation(text: str, max_chars: int = 900) -> list[str]:
+def chunk_text_for_translation(text: str, max_chars: int = 400) -> list[str]:
     cleaned = text.strip()
     if not cleaned:
         return []
@@ -101,13 +101,18 @@ async def translate_to_sinhala_full(text: str) -> str:
     for index, chunk in enumerate(chunks):
         try:
             translated = await call_translation_api(chunk)
-            translated_chunks.append(translated.strip() if translated else chunk)
+            if translated and translated.strip():
+                translated_chunks.append(translated.strip())
+            else:
+                logger.warning(
+                    "Empty translation result for chunk %s/%s (%d chars). Using English fallback.",
+                    index + 1, len(chunks), len(chunk),
+                )
+                translated_chunks.append(chunk)
         except Exception as exc:
             logger.warning(
-                "Chunk translation failed at part %s/%s: %s",
-                index + 1,
-                len(chunks),
-                exc,
+                "Chunk translation failed at part %s/%s (%d chars): %s. Using English fallback.",
+                index + 1, len(chunks), len(chunk), exc,
             )
             translated_chunks.append(chunk)
 
@@ -181,32 +186,18 @@ async def generate_summary_bundle(file_name: str, extracted_content: dict) -> di
     # 6. Key Findings
     key_findings = split_sentences(english_summary)[:3]
 
-    # 7. Translate the main summary and Gemini analysis details.
+    # 7. Translate the main summary only.
     sinhala_summary = ""
-    sinhala_image_details: list[str] = []
-    sinhala_table_details: list[str] = []
     try:
         logger.info("Calling Translation API for main summary...")
         sinhala_summary = await translate_to_sinhala_full(english_summary)
         logger.info("Main summary translation successful.")
-
-        if image_details:
-            logger.info("Translating %s image analysis section(s) to Sinhala...", len(image_details))
-            for detail in image_details:
-                sinhala_image_details.append(await translate_to_sinhala_full(detail))
-
-        if table_details:
-            logger.info("Translating %s table analysis section(s) to Sinhala...", len(table_details))
-            for detail in table_details:
-                sinhala_table_details.append(await translate_to_sinhala_full(detail))
     except Exception as e:
         logger.error(f"Translation failed: {e}")
         sinhala_summary = (
             "සිංහල පරිවර්තනය දැනට ලබා ගත නොහැක. කරුණාකර ඉංග්‍රීසි සාරාංශය බලන්න. "
             "(Sinhala translation is currently unavailable.)"
         )
-        sinhala_image_details = []
-        sinhala_table_details = []
 
     return {
         "topic": topic,
@@ -215,9 +206,5 @@ async def generate_summary_bundle(file_name: str, extracted_content: dict) -> di
         "key_findings": key_findings,
         "english_summary": english_summary,
         "sinhala_summary": sinhala_summary,
-        "image_details": image_details,
-        "table_details": table_details,
-        "sinhala_image_details": sinhala_image_details,
-        "sinhala_table_details": sinhala_table_details,
     }
 
