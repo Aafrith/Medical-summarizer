@@ -21,6 +21,8 @@ class Settings(BaseSettings):
 
     gradio_summary_url: str = ""
     gradio_translation_url: str = ""
+    gemini_api_key: str = ""
+
 
     model_config = SettingsConfigDict(
         env_file=str(BACKEND_ROOT / ".env"),

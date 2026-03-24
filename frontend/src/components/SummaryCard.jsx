@@ -40,6 +40,31 @@ export default function SummaryCard({ job }) {
           ))}
         </ul>
       </section>
+
+      {result.imageDetails && result.imageDetails.length > 0 && (
+        <section className="analysis-block">
+          <h5>Visual Content Analysis (Gemini)</h5>
+          {result.imageDetails.map((detail, idx) => (
+            <div key={idx} className="analysis-item">
+              <h6>Image {idx + 1}</h6>
+              <p>{detail}</p>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {result.tableDetails && result.tableDetails.length > 0 && (
+        <section className="analysis-block">
+          <h5>Tabular Content Analysis (Gemini)</h5>
+          {result.tableDetails.map((detail, idx) => (
+            <div key={idx} className="analysis-item">
+              <h6>Table {idx + 1}</h6>
+              <p>{detail}</p>
+            </div>
+          ))}
+        </section>
+      )}
     </article>
+
   );
 }

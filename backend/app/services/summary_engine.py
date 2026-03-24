@@ -2,9 +2,14 @@ import logging
 import re
 from datetime import datetime
 
+from app.core.config import get_settings
+from app.services.gemini_service import GeminiService
 from app.services.gradio_service import call_summary_api, call_translation_api
 
 logger = logging.getLogger(__name__)
+settings = get_settings()
+gemini = GeminiService(api_key=settings.gemini_api_key)
+
 
 TOPIC_KEYWORDS: list[tuple[str, list[str]]] = [
     ("Oncology", ["cancer", "tumor", "oncology", "carcinoma", "metastasis"]),
@@ -58,45 +63,85 @@ def estimate_confidence(text: str) -> float:
     return 0.86
 
 
-async def generate_summary_bundle(file_name: str, text: str) -> dict:
-    """Build the full summary bundle by calling both Gradio AI services.
+async def generate_summary_bundle(file_name: str, extracted_content: dict) -> dict:
 
-    - English summary  → Summary Gradio space
-    - Sinhala summary  → Translation Gradio space (translates the English result)
-    - Topic / year     → Local heuristics (unchanged)
-    """
-    logger.info(f"Generating summary bundle for file: {file_name}")
+    """Build the full summary bundle by calling both Gradio AI services.
     
-    topic = detect_topic(file_name=file_name, text=text)
-    publication_year = detect_publication_year(file_name=file_name, text=text)
+    Hybrid approach:
+    1. Parse images and tables one by one through Gemini.
+    2. Add all descriptions to the original text.
+    3. Summarize the combined text.
+    """
+    logger.info(f"Generating hybrid summary bundle for file: {file_name}")
+    
+    original_text = extracted_content.get("text", "")
+    images = extracted_content.get("images", [])
+    tables = extracted_content.get("tables", [])
+    
+    image_details = []
+    table_details = []
+
+    # 1. Analyze Images one by one
+    logger.info(f"Processing {len(images)} images via Gemini...")
+    for i, img in enumerate(images):
+        logger.info(f"Analyzing image {i+1}/{len(images)}")
+        explanation = gemini.describe_image(img["bytes"], f"image/{img['extension']}")
+        image_details.append(explanation)
+        logger.info(f"Finished analyzing image {i+1}")
+
+    # 2. Analyze Tables one by one
+    logger.info(f"Processing {len(tables)} tables via Gemini...")
+    for i, table_text in enumerate(tables):
+        logger.info(f"Analyzing table {i+1}/{len(tables)}")
+        explanation = gemini.describe_table(table_text)
+        table_details.append(explanation)
+        logger.info(f"Finished analyzing table {i+1}")
+
+    # 3. Combine everything
+    logger.info("Combining original text with image and table explanations")
+    combined_text = original_text + "\n\n"
+    
+    if image_details:
+        combined_text += "### Visual Content Analysis\n" + "\n".join(image_details) + "\n\n"
+    
+    if table_details:
+        combined_text += "### Tabular Content Analysis\n" + "\n".join(table_details) + "\n\n"
+
+    # 4. Standard Metadata
+    topic = detect_topic(file_name=file_name, text=original_text)
+    publication_year = detect_publication_year(file_name=file_name, text=original_text)
     logger.info(f"Detected topic: {topic}, year: {publication_year}")
 
-    # Call Gradio summary API with the document text (capped to avoid token limits)
-    logger.info("Calling Summary API...")
-    english_summary = await call_summary_api(text[:8000])
-    logger.info("Summary API call successful.")
+    # 5. Summarize (using combined text)
+    logger.info("Calling Summarizer API with combined context...")
+    # Cap combined text to avoid exceeding API limits if necessary (e.g. 10000 chars)
+    english_summary = await call_summary_api(combined_text[:12000])
+    logger.info("Summarizer response received.")
 
-    # Derive key findings from the first 3 sentences of the AI summary
+    # 6. Key Findings
     key_findings = split_sentences(english_summary)[:3]
 
-    # Translate the English summary to Sinhala via the translation Gradio API
+    # 7. Translate
     sinhala_summary = ""
     try:
         logger.info("Calling Translation API...")
         sinhala_summary = await call_translation_api(english_summary)
-        logger.info("Translation API call successful.")
+        logger.info("Translation successful.")
     except Exception as e:
-        logger.warning(f"Translation service failed: {str(e)}. Proceeding with English summary only.")
+        logger.error(f"Translation failed: {e}")
         sinhala_summary = (
             "සිංහල පරිවර්තනය දැනට ලබා ගත නොහැක. කරුණාකර ඉංග්‍රීසි සාරාංශය බලන්න. "
-            "(Sinhala translation is currently unavailable. Please refer to the English summary.)"
+            "(Sinhala translation is currently unavailable.)"
         )
 
     return {
         "topic": topic,
         "publication_year": publication_year,
-        "confidence": estimate_confidence(text),
+        "confidence": estimate_confidence(original_text),
         "key_findings": key_findings,
         "english_summary": english_summary,
         "sinhala_summary": sinhala_summary,
+        "image_details": image_details,
+        "table_details": table_details,
     }
+

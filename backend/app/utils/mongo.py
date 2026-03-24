@@ -30,5 +30,8 @@ def serialize_summary(summary: dict[str, Any]) -> dict[str, Any]:
         "keyFindings": summary.get("key_findings", []),
         "englishSummary": summary["english_summary"],
         "sinhalaSummary": summary["sinhala_summary"],
+        "imageDetails": summary.get("image_details", []),
+        "tableDetails": summary.get("table_details", []),
         "createdAt": to_iso(summary.get("created_at")),
     }
+

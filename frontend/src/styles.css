@@ -552,6 +552,43 @@ tbody td {
   margin-top: 0.34rem;
 }
 
+.analysis-block {
+  margin-top: 0.78rem;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  padding: 0.72rem;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.analysis-block h5 {
+  margin: 0;
+  font-size: 0.83rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.analysis-item {
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px dotted var(--line);
+}
+
+.analysis-item h6 {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
+.analysis-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+
 .architecture-grid {
   margin-top: 0.95rem;
   display: grid;

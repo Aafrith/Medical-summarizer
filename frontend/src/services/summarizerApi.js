@@ -26,6 +26,9 @@ export async function summarizeDocument(file, options) {
     keyFindings: Array.isArray(data.keyFindings) ? data.keyFindings : [],
     englishSummary: data.englishSummary,
     sinhalaSummary: data.sinhalaSummary,
+    imageDetails: Array.isArray(data.imageDetails) ? data.imageDetails : [],
+    tableDetails: Array.isArray(data.tableDetails) ? data.tableDetails : [],
     createdAt: data.createdAt,
   };
+
 }

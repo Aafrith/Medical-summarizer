@@ -8,8 +8,9 @@ from app.core.config import get_settings
 from app.core.database import get_database
 from app.core.deps import get_current_user
 from app.schemas.summary import SummaryListResponse, SummaryResponse
-from app.services.file_extractor import extract_text_from_upload
+from app.services.file_extractor import extract_content_from_upload
 from app.services.summary_engine import generate_summary_bundle
+
 from app.utils.mongo import serialize_summary
 
 router = APIRouter(prefix="/summaries", tags=["Summaries"])
@@ -22,24 +23,34 @@ async def upload_and_summarize(
     db: AsyncIOMotorDatabase = Depends(get_database),
     current_user: dict = Depends(get_current_user),
 ) -> SummaryResponse:
-    text_content, file_type, file_size = await extract_text_from_upload(file, settings.max_upload_size_mb)
-    summary_bundle = await generate_summary_bundle(file_name=file.filename or "document", text=text_content)
+    # 1. Hybrid extraction (Text, Images, Tables)
+
+    extracted_content = await extract_content_from_upload(file, settings.max_upload_size_mb)
+    
+    # 2. Hybrid summarization (Analyzing images/tables with Gemini first)
+    summary_bundle = await generate_summary_bundle(
+        file_name=file.filename or "document", 
+        extracted_content=extracted_content
+    )
 
     summary_doc = {
         "user_id": current_user["_id"],
         "file_name": file.filename or "document",
-        "file_size": file_size,
-        "file_type": file_type,
+        "file_size": extracted_content["file_size"],
+        "file_type": extracted_content["extension"],
         "topic": summary_bundle["topic"],
         "publication_year": summary_bundle["publication_year"],
         "confidence": summary_bundle["confidence"],
         "key_findings": summary_bundle["key_findings"],
         "english_summary": summary_bundle["english_summary"],
         "sinhala_summary": summary_bundle["sinhala_summary"],
+        "image_details": summary_bundle.get("image_details", []),
+        "table_details": summary_bundle.get("table_details", []),
         "created_at": datetime.now(timezone.utc),
     }
 
     inserted = await db.summaries.insert_one(summary_doc)
+
     saved = await db.summaries.find_one({"_id": inserted.inserted_id})
 
     return SummaryResponse(**serialize_summary(saved))

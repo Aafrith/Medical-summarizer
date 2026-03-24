@@ -12,7 +12,10 @@ class SummaryResponse(BaseModel):
     keyFindings: list[str]
     englishSummary: str
     sinhalaSummary: str
+    imageDetails: list[str] = []
+    tableDetails: list[str] = []
     createdAt: str | None = None
+
 
 
 class SummaryListResponse(BaseModel):
