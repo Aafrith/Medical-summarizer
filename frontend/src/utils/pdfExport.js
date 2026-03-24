@@ -26,7 +26,7 @@ export function downloadSummaryPdf(job) {
     <h1 style="margin:0 0 12px;font-size:24px;">Medical Document Summary Report</h1>
     <p style="margin:0 0 6px;font-size:13px;"><strong>Source File:</strong> ${escapeHtml(file.name)}</p>
     <p style="margin:0 0 6px;font-size:13px;"><strong>Topic:</strong> ${escapeHtml(result.topic)}</p>
-    <p style="margin:0 0 18px;font-size:13px;"><strong>Quality Score:</strong> ${Math.round(result.confidence * 100)}%</p>
+    <p style="margin:0 0 18px;font-size:13px;"><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
 
     <h2 style="margin:0 0 8px;font-size:18px;">English Summary</h2>
     <p style="margin:0 0 16px;line-height:1.6;font-size:13px;white-space:pre-wrap;">

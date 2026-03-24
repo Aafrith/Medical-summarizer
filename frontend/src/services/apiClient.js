@@ -42,7 +42,20 @@ export async function apiRequest(path, options = {}) {
 
   const contentType = response.headers.get("content-type") || "";
   const isJson = contentType.includes("application/json");
-  const payload = isJson ? await response.json() : await response.text();
+  const rawPayload = await response.text();
+  let payload = rawPayload;
+
+  if (isJson) {
+    if (!rawPayload.trim()) {
+      payload = null;
+    } else {
+      try {
+        payload = JSON.parse(rawPayload);
+      } catch {
+        throw new Error("Received an invalid JSON response from the backend service.");
+      }
+    }
+  }
 
   if (!response.ok) {
     const detail =

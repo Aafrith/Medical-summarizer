@@ -44,11 +44,14 @@ export default function HistoryPage() {
       return;
     }
 
+    const previousEntries = entries;
+    setError("");
+    setEntries([]);
+
     try {
       await apiRequest("/summaries/history", { method: "DELETE", token: authToken });
-      setEntries([]);
-      setError("");
     } catch (requestError) {
+      setEntries(previousEntries);
       setError(requestError instanceof Error ? requestError.message : "Unable to clear summary history.");
     }
   };

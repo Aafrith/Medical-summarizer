@@ -15,7 +15,6 @@ export default function SummaryCard({ job }) {
           <p>{result.topic}</p>
         </div>
         <div className="summary-header-actions">
-          <div className="confidence-pill">Quality Score {Math.round(result.confidence * 100)}%</div>
           <PdfDownloadButton job={job} />
         </div>
       </header>
