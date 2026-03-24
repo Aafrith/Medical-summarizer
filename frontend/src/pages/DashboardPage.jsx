@@ -51,6 +51,11 @@ export default function DashboardPage() {
       </header>
 
       <main>
+        <div className="awareness-note section" role="note" aria-label="Medical disclaimer">
+          Summaries are for educational purposes only and should not be used for diagnosis or treatment
+          without consulting a doctor.
+        </div>
+
         <UploadZone
           onAddFiles={addFiles}
           disabled={isRunning}
