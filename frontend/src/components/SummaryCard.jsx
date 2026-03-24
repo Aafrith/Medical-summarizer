@@ -47,6 +47,12 @@ export default function SummaryCard({ job }) {
             <div key={idx} className="analysis-item">
               <h6>Image {idx + 1}</h6>
               <p>{detail}</p>
+              {result.sinhalaImageDetails?.[idx] ? (
+                <>
+                  <h6>Image {idx + 1} - Sinhala Translation</h6>
+                  <p className="sinhala-text">{result.sinhalaImageDetails[idx]}</p>
+                </>
+              ) : null}
             </div>
           ))}
         </section>
@@ -59,6 +65,12 @@ export default function SummaryCard({ job }) {
             <div key={idx} className="analysis-item">
               <h6>Table {idx + 1}</h6>
               <p>{detail}</p>
+              {result.sinhalaTableDetails?.[idx] ? (
+                <>
+                  <h6>Table {idx + 1} - Sinhala Translation</h6>
+                  <p className="sinhala-text">{result.sinhalaTableDetails[idx]}</p>
+                </>
+              ) : null}
             </div>
           ))}
         </section>

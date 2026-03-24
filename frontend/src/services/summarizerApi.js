@@ -28,6 +28,8 @@ export async function summarizeDocument(file, options) {
     sinhalaSummary: data.sinhalaSummary,
     imageDetails: Array.isArray(data.imageDetails) ? data.imageDetails : [],
     tableDetails: Array.isArray(data.tableDetails) ? data.tableDetails : [],
+    sinhalaImageDetails: Array.isArray(data.sinhalaImageDetails) ? data.sinhalaImageDetails : [],
+    sinhalaTableDetails: Array.isArray(data.sinhalaTableDetails) ? data.sinhalaTableDetails : [],
     createdAt: data.createdAt,
   };
 

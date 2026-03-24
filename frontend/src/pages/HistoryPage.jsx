@@ -104,6 +104,10 @@ export default function HistoryPage() {
                           englishSummary: entry.englishSummary,
                           sinhalaSummary: entry.sinhalaSummary,
                           keyFindings: entry.keyFindings,
+                          imageDetails: entry.imageDetails,
+                          tableDetails: entry.tableDetails,
+                          sinhalaImageDetails: entry.sinhalaImageDetails,
+                          sinhalaTableDetails: entry.sinhalaTableDetails,
                         },
                       })
                     }

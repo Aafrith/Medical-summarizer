@@ -44,6 +44,54 @@ export function downloadSummaryPdf(job) {
         .map((finding) => `<li>${escapeHtml(finding)}</li>`)
         .join("")}
     </ul>
+
+    ${Array.isArray(result.imageDetails) && result.imageDetails.length > 0 ? `
+      <h2 style="margin:16px 0 8px;font-size:18px;">Visual Content Analysis (Gemini) - English</h2>
+      ${(result.imageDetails || [])
+        .map(
+          (detail, idx) => `
+            <h3 style="margin:10px 0 4px;font-size:14px;">Image ${idx + 1}</h3>
+            <p style="margin:0 0 8px;line-height:1.6;font-size:13px;white-space:pre-wrap;">${escapeHtml(detail)}</p>
+          `
+        )
+        .join("")}
+    ` : ""}
+
+    ${Array.isArray(result.sinhalaImageDetails) && result.sinhalaImageDetails.length > 0 ? `
+      <h2 style="margin:16px 0 8px;font-size:18px;">Visual Content Analysis (Gemini) - Sinhala</h2>
+      ${(result.sinhalaImageDetails || [])
+        .map(
+          (detail, idx) => `
+            <h3 style="margin:10px 0 4px;font-size:14px;">Image ${idx + 1}</h3>
+            <p style="margin:0 0 8px;line-height:1.8;font-size:13px;font-family:'Noto Sans Sinhala', Arial, sans-serif;white-space:pre-wrap;">${escapeHtml(detail)}</p>
+          `
+        )
+        .join("")}
+    ` : ""}
+
+    ${Array.isArray(result.tableDetails) && result.tableDetails.length > 0 ? `
+      <h2 style="margin:16px 0 8px;font-size:18px;">Tabular Content Analysis (Gemini) - English</h2>
+      ${(result.tableDetails || [])
+        .map(
+          (detail, idx) => `
+            <h3 style="margin:10px 0 4px;font-size:14px;">Table ${idx + 1}</h3>
+            <p style="margin:0 0 8px;line-height:1.6;font-size:13px;white-space:pre-wrap;">${escapeHtml(detail)}</p>
+          `
+        )
+        .join("")}
+    ` : ""}
+
+    ${Array.isArray(result.sinhalaTableDetails) && result.sinhalaTableDetails.length > 0 ? `
+      <h2 style="margin:16px 0 8px;font-size:18px;">Tabular Content Analysis (Gemini) - Sinhala</h2>
+      ${(result.sinhalaTableDetails || [])
+        .map(
+          (detail, idx) => `
+            <h3 style="margin:10px 0 4px;font-size:14px;">Table ${idx + 1}</h3>
+            <p style="margin:0 0 8px;line-height:1.8;font-size:13px;font-family:'Noto Sans Sinhala', Arial, sans-serif;white-space:pre-wrap;">${escapeHtml(detail)}</p>
+          `
+        )
+        .join("")}
+    ` : ""}
   `;
 
   document.body.appendChild(reportNode);

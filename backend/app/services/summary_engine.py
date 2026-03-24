@@ -54,6 +54,66 @@ def split_sentences(text: str) -> list[str]:
     return [sentence.strip() for sentence in rough_sentences if sentence.strip()]
 
 
+def chunk_text_for_translation(text: str, max_chars: int = 900) -> list[str]:
+    cleaned = text.strip()
+    if not cleaned:
+        return []
+
+    sentences = split_sentences(cleaned)
+    if not sentences:
+        return [cleaned]
+
+    chunks: list[str] = []
+    current = ""
+
+    for sentence in sentences:
+        if len(sentence) > max_chars:
+            if current:
+                chunks.append(current.strip())
+                current = ""
+
+            for i in range(0, len(sentence), max_chars):
+                part = sentence[i:i + max_chars].strip()
+                if part:
+                    chunks.append(part)
+            continue
+
+        candidate = f"{current} {sentence}".strip() if current else sentence
+        if len(candidate) <= max_chars:
+            current = candidate
+        else:
+            chunks.append(current.strip())
+            current = sentence
+
+    if current:
+        chunks.append(current.strip())
+
+    return chunks
+
+
+async def translate_to_sinhala_full(text: str) -> str:
+    """Translate long English text in chunks to avoid output truncation."""
+    chunks = chunk_text_for_translation(text)
+    if not chunks:
+        return ""
+
+    translated_chunks: list[str] = []
+    for index, chunk in enumerate(chunks):
+        try:
+            translated = await call_translation_api(chunk)
+            translated_chunks.append(translated.strip() if translated else chunk)
+        except Exception as exc:
+            logger.warning(
+                "Chunk translation failed at part %s/%s: %s",
+                index + 1,
+                len(chunks),
+                exc,
+            )
+            translated_chunks.append(chunk)
+
+    return "\n".join(part for part in translated_chunks if part).strip()
+
+
 def estimate_confidence(text: str) -> float:
     text_length = len(text)
     if text_length < 400:
@@ -121,18 +181,32 @@ async def generate_summary_bundle(file_name: str, extracted_content: dict) -> di
     # 6. Key Findings
     key_findings = split_sentences(english_summary)[:3]
 
-    # 7. Translate
+    # 7. Translate the main summary and Gemini analysis details.
     sinhala_summary = ""
+    sinhala_image_details: list[str] = []
+    sinhala_table_details: list[str] = []
     try:
-        logger.info("Calling Translation API...")
-        sinhala_summary = await call_translation_api(english_summary)
-        logger.info("Translation successful.")
+        logger.info("Calling Translation API for main summary...")
+        sinhala_summary = await translate_to_sinhala_full(english_summary)
+        logger.info("Main summary translation successful.")
+
+        if image_details:
+            logger.info("Translating %s image analysis section(s) to Sinhala...", len(image_details))
+            for detail in image_details:
+                sinhala_image_details.append(await translate_to_sinhala_full(detail))
+
+        if table_details:
+            logger.info("Translating %s table analysis section(s) to Sinhala...", len(table_details))
+            for detail in table_details:
+                sinhala_table_details.append(await translate_to_sinhala_full(detail))
     except Exception as e:
         logger.error(f"Translation failed: {e}")
         sinhala_summary = (
             "සිංහල පරිවර්තනය දැනට ලබා ගත නොහැක. කරුණාකර ඉංග්‍රීසි සාරාංශය බලන්න. "
             "(Sinhala translation is currently unavailable.)"
         )
+        sinhala_image_details = []
+        sinhala_table_details = []
 
     return {
         "topic": topic,
@@ -143,5 +217,7 @@ async def generate_summary_bundle(file_name: str, extracted_content: dict) -> di
         "sinhala_summary": sinhala_summary,
         "image_details": image_details,
         "table_details": table_details,
+        "sinhala_image_details": sinhala_image_details,
+        "sinhala_table_details": sinhala_table_details,
     }
 

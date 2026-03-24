@@ -114,7 +114,7 @@ async def call_summary_api(text: str) -> str:
         "input_text": text,
         "num_beams": 4,
         "min_length": 60,
-        "max_length": 384
+        "max_length": 768
     }
     return await _call_gradio(
         url=settings.gradio_summary_url,

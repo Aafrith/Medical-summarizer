@@ -46,6 +46,8 @@ async def upload_and_summarize(
         "sinhala_summary": summary_bundle["sinhala_summary"],
         "image_details": summary_bundle.get("image_details", []),
         "table_details": summary_bundle.get("table_details", []),
+        "sinhala_image_details": summary_bundle.get("sinhala_image_details", []),
+        "sinhala_table_details": summary_bundle.get("sinhala_table_details", []),
         "created_at": datetime.now(timezone.utc),
     }
 
